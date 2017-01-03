@@ -1,0 +1,4 @@
+#!/bin/bash
+export GOPATH=$(mktemp -d)
+go get -v .
+env GOOS=linux GOARCH=amd64 go build -v -o neststats.linux.amd64 .
