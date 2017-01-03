@@ -22,13 +22,39 @@ type ThermostatData struct {
 	StructureID        string  `json:"structure_id"`
 }
 
-type StampedThermostatData struct {
-	Stamp time.Time      `json:"stamp"`
-	Data  ThermostatData `json:"data"`
+type StampedData struct {
+	ThermostatStamp time.Time      `json:"thermostatStamp"`
+	ThermostatData  ThermostatData `json:"thermostatData"`
+	WeatherStamp    time.Time      `json:"weatherStamp"`
+	WeatherData     OwmWeatherMain `json:"weatherData"`
+}
+
+type OwmWeatherMain struct {
+	Temperature float64 `json:"temp"`
+	Pressure    float64 `json:"pressure"`
+	Humidity    float64 `json:"humidity"`
+}
+
+type OwmResult struct {
+	WeatherMain OwmWeatherMain `json:"main"`
+	// {"coord": {"lon":16.37,"lat":48.21},
+	// 	"weather":[
+	// 		{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}
+	// 	],
+	// 	"base":"stations",
+	// 	"main": {"temp":275.15,"pressure":1018,"humidity":55,"temp_min":275.15,"temp_max":275.15},
+	// 	"visibility": 10000,
+	//  "wind":{"speed":4.6,"deg":240},
+	//  "clouds":{"all":0},
+	//  "dt":1483482600,
+	//  "sys":{"type":1,"id":5934,"message":0.0133,"country":"AT","sunrise":1483425896,"sunset":1483456460},
+	//  "id":2761369,"name":"Vienna","cod":200}
 }
 
 var currentData ThermostatData
 var currentDataTime time.Time
+var currentWeather OwmWeatherMain
+var currentWeatherTime time.Time
 var currentDataMutex sync.Mutex
 
 var (
@@ -48,6 +74,18 @@ var (
 		Name: "is_heating",
 		Help: "Flag (0 or 1) indicating if currently heating.",
 	})
+	promOutsideHumidity = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "outside_humidity",
+		Help: "Current humidity (outside).",
+	})
+	promOutsideTemperature = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "outside_temperature",
+		Help: "Current temperature (outside).",
+	})
+	promOutsidePressure = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "outside_pressure",
+		Help: "Current pressure (outside).",
+	})
 )
 
 func init() {
@@ -55,6 +93,10 @@ func init() {
 	prometheus.MustRegister(promTemperature)
 	prometheus.MustRegister(promTargetTemperature)
 	prometheus.MustRegister(promIsHeating)
+
+	prometheus.MustRegister(promOutsideHumidity)
+	prometheus.MustRegister(promOutsideTemperature)
+	prometheus.MustRegister(promOutsidePressure)
 }
 
 func headerAdder(auth string) func(req *http.Request) {
@@ -74,7 +116,7 @@ func checkRedirectFunc(headerAdder func(*http.Request)) func(req *http.Request, 
 	}
 }
 
-func download(thermostatID string, clientSecret string) (ThermostatData, error) {
+func downloadNest(thermostatID string, clientSecret string) (ThermostatData, error) {
 	var data ThermostatData
 
 	auth := "Bearer " + clientSecret
@@ -111,8 +153,8 @@ func download(thermostatID string, clientSecret string) (ThermostatData, error) 
 	return data, nil
 }
 
-func downloadAndStore(thermostatID string, clientSecret string) {
-	ts, err := download(thermostatID, clientSecret)
+func downloadNestAndStore(thermostatID string, clientSecret string) {
+	ts, err := downloadNest(thermostatID, clientSecret)
 	if err != nil {
 		log.Printf("error: %v", err)
 	} else {
@@ -136,10 +178,45 @@ func downloadAndStore(thermostatID string, clientSecret string) {
 	}
 }
 
+func downloadWeatherAndStore(apiKey string, cityID string) {
+	var result OwmResult
+	resp, err := http.Get("http://api.openweathermap.org/data/2.5/weather?units=metric&id=" + cityID + "&appid=" + apiKey)
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("error: %v", err)
+		return
+	}
+
+	if *doDebug {
+		log.Printf("json: %s", body)
+	}
+
+	json.Unmarshal(body, &result)
+
+	if err != nil {
+		log.Printf("error: %v", err)
+	} else {
+		if *doDebug {
+			log.Printf("%v", result)
+		}
+		currentDataMutex.Lock()
+		currentWeather = result.WeatherMain
+		currentWeatherTime = time.Now()
+		currentDataMutex.Unlock()
+		promOutsideHumidity.Set(result.WeatherMain.Humidity)
+		promOutsideTemperature.Set(result.WeatherMain.Temperature)
+		promOutsidePressure.Set(result.WeatherMain.Pressure)
+	}
+}
+
 var listenOn = flag.String("listen-address", "127.0.0.1:9092", "The address to listen on for HTTP requests.")
 var clientSecret = flag.String("client-secret", "", "")
 var thermostatID = flag.String("thermostat-id", "", "")
 var doDebug = flag.Bool("debug", false, "emit debug info")
+var owmAPIKey = flag.String("owm-apikey", "", "openweathermap API Key")
+var owmCityID = flag.String("owm-city-id", "2761369", "openweathermap.org cityID") // cityID defaults to Vienna, AT
 
 func main() {
 	flag.Parse()
@@ -148,13 +225,25 @@ func main() {
 	}
 	log.Printf("starting, will listen on %v", *listenOn)
 
-	downloadAndStore(*thermostatID, *clientSecret)
-
-	ticker := time.NewTicker(time.Second * 30)
+	nestTicker := time.NewTicker(time.Second * 30)
 	go func() {
-		for t := range ticker.C {
-			log.Printf("tick at %v", t)
-			downloadAndStore(*thermostatID, *clientSecret)
+		downloadNestAndStore(*thermostatID, *clientSecret)
+		for t := range nestTicker.C {
+			log.Printf("nestTicker tick at %v", t)
+			downloadNestAndStore(*thermostatID, *clientSecret)
+		}
+	}()
+
+	weatherTicker := time.NewTicker(time.Minute * 30)
+	go func() {
+		if *owmAPIKey == "" {
+			log.Printf("no OWM Api Key, not fetching weather data")
+			return
+		}
+		downloadWeatherAndStore(*owmAPIKey, *owmCityID)
+		for t := range weatherTicker.C {
+			log.Printf("weatherTicker tick at %v", t)
+			downloadWeatherAndStore(*owmAPIKey, *owmCityID)
 		}
 	}()
 
@@ -164,10 +253,12 @@ func main() {
 }
 
 func httpDataHandler(w http.ResponseWriter, req *http.Request) {
-	var data StampedThermostatData
+	var data StampedData
 	currentDataMutex.Lock()
-	data.Data = currentData
-	data.Stamp = currentDataTime
+	data.ThermostatData = currentData
+	data.ThermostatStamp = currentDataTime
+	data.WeatherData = currentWeather
+	data.WeatherStamp = currentWeatherTime
 	currentDataMutex.Unlock()
 
 	b, _ := json.Marshal(data)
