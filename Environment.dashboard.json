@@ -8,7 +8,7 @@
   "sharedCrosshair": false,
   "hideControls": false,
   "time": {
-    "from": "now-30m",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {
@@ -44,7 +44,7 @@
   },
   "refresh": false,
   "schemaVersion": 13,
-  "version": 8,
+  "version": 14,
   "links": [],
   "gnetId": null,
   "rows": [
@@ -61,6 +61,7 @@
             "rgba(245, 54, 54, 0.9)"
           ],
           "datasource": "Prom",
+          "decimals": 1,
           "editable": true,
           "error": false,
           "format": "celsius",
@@ -99,7 +100,7 @@
               "to": "null"
             }
           ],
-          "span": 3,
+          "span": 6,
           "sparkline": {
             "fillColor": "rgba(31, 118, 189, 0.18)",
             "full": false,
@@ -113,7 +114,7 @@
               "legendFormat": "",
               "metric": "env_temperature",
               "refId": "A",
-              "step": 200
+              "step": 9000
             }
           ],
           "thresholds": "19,23",
@@ -127,8 +128,7 @@
               "value": "null"
             }
           ],
-          "valueName": "current",
-          "decimals": 1
+          "valueName": "current"
         },
         {
           "cacheTimeout": null,
@@ -178,7 +178,7 @@
               "to": "null"
             }
           ],
-          "span": 3,
+          "span": 6,
           "sparkline": {
             "fillColor": "rgba(31, 118, 189, 0.18)",
             "full": false,
@@ -193,7 +193,7 @@
               "legendFormat": "",
               "metric": "env_humidity",
               "refId": "A",
-              "step": 40
+              "step": 1800
             }
           ],
           "thresholds": "30,45",
@@ -208,11 +208,24 @@
             }
           ],
           "valueName": "current"
-        },
+        }
+      ],
+      "showTitle": false,
+      "titleSize": "h3",
+      "height": 249,
+      "repeat": null,
+      "repeatRowId": null,
+      "repeatIteration": null,
+      "collapse": false
+    },
+    {
+      "title": "Dashboard Row",
+      "panels": [
         {
           "aliasColors": {},
           "bars": false,
           "datasource": "Prom",
+          "decimals": 1,
           "editable": true,
           "error": false,
           "fill": 2,
@@ -234,10 +247,22 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
+          "repeat": null,
           "seriesOverrides": [
             {
-              "alias": "Humidity%",
+              "alias": "Humidity",
+              "fill": 0,
+              "linewidth": 2,
               "yaxis": 2
+            },
+            {
+              "alias": "Target Temperature",
+              "color": "#1F78C1",
+              "fill": 0
+            },
+            {
+              "alias": "Temperature",
+              "color": "#EAB839"
             }
           ],
           "span": 6,
@@ -248,19 +273,28 @@
               "expr": "env_humidity",
               "interval": "",
               "intervalFactor": 10,
-              "legendFormat": "Humidity%",
+              "legendFormat": "Humidity",
               "metric": "env_humidity",
               "refId": "A",
-              "step": 20
+              "step": 1200
             },
             {
               "expr": "env_temperature",
               "interval": "",
               "intervalFactor": 10,
-              "legendFormat": "Temperature C",
+              "legendFormat": "Temperature",
               "metric": "env_temperature",
               "refId": "B",
-              "step": 20
+              "step": 1200
+            },
+            {
+              "expr": "target_temperature",
+              "interval": "",
+              "intervalFactor": 10,
+              "legendFormat": "Target Temperature",
+              "metric": "target_temperature",
+              "refId": "C",
+              "step": 1200
             }
           ],
           "thresholds": [],
@@ -298,13 +332,94 @@
               "min": "10",
               "show": true
             }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "Prom",
+          "editable": true,
+          "error": false,
+          "fill": 7,
+          "id": 5,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {
+              "alias": "heating",
+              "color": "#BF1B00",
+              "nullPointMode": "null"
+            }
           ],
-          "repeat": null
+          "span": 6,
+          "stack": false,
+          "steppedLine": true,
+          "targets": [
+            {
+              "expr": "is_heating",
+              "intervalFactor": 1,
+              "legendFormat": "heating",
+              "metric": "is_heating",
+              "refId": "A",
+              "step": 120
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "",
+          "tooltip": {
+            "msResolution": false,
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "transparent": true,
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "none",
+              "label": "",
+              "logBase": 10,
+              "max": "1",
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ]
         }
       ],
       "showTitle": false,
-      "titleSize": "h3",
-      "height": 251,
+      "titleSize": "h6",
+      "height": 250,
       "repeat": null,
       "repeatRowId": null,
       "repeatIteration": null,
