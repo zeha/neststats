@@ -15,9 +15,16 @@ import (
 )
 
 type ThermostatData struct {
-	Humidity           float64 `json:"humidity"`
+	CurrentHumidity    float64 `json:"humidity"`
+	CurrentTemperature float64 `json:"ambient_temperature_c"`
 	TargetTemperature  float64 `json:"target_temperature_c"`
-	AmbientTemperature float64 `json:"ambient_temperature_c"`
+	HvacState          string  `json:"hvac_state"`
+	StructureID        string  `json:"structure_id"`
+}
+
+type StampedThermostatData struct {
+	Stamp time.Time      `json:"stamp"`
+	Data  ThermostatData `json:"data"`
 }
 
 var currentData ThermostatData
@@ -37,12 +44,17 @@ var (
 		Name: "target_temperature",
 		Help: "Target temperature.",
 	})
+	promIsHeating = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "is_heating",
+		Help: "Flag (0 or 1) indicating if currently heating.",
+	})
 )
 
 func init() {
 	prometheus.MustRegister(promHumidity)
 	prometheus.MustRegister(promTemperature)
 	prometheus.MustRegister(promTargetTemperature)
+	prometheus.MustRegister(promIsHeating)
 }
 
 func headerAdder(auth string) func(req *http.Request) {
@@ -111,9 +123,16 @@ func downloadAndStore(thermostatID string, clientSecret string) {
 		currentData = ts
 		currentDataTime = time.Now()
 		currentDataMutex.Unlock()
-		promHumidity.Set(ts.Humidity)
-		promTemperature.Set(ts.AmbientTemperature)
+		promHumidity.Set(ts.CurrentHumidity)
+		promTemperature.Set(ts.CurrentTemperature)
 		promTargetTemperature.Set(ts.TargetTemperature)
+		var isHeating float64
+		if ts.HvacState == "heating" {
+			isHeating = 1
+		} else {
+			isHeating = 0
+		}
+		promIsHeating.Set(isHeating)
 	}
 }
 
@@ -139,23 +158,20 @@ func main() {
 		}
 	}()
 
-	http.HandleFunc("/", rootPageHandler)
+	http.HandleFunc("/data", httpDataHandler)
 	http.Handle("/metrics", promhttp.Handler())
 	log.Fatal(http.ListenAndServe(*listenOn, nil))
 }
 
-func rootPageHandler(w http.ResponseWriter, req *http.Request) {
-	var data ThermostatData
+func httpDataHandler(w http.ResponseWriter, req *http.Request) {
+	var data StampedThermostatData
 	currentDataMutex.Lock()
-	data = currentData
-	//stamp := currentDataTime
+	data.Data = currentData
+	data.Stamp = currentDataTime
 	currentDataMutex.Unlock()
 
 	b, _ := json.Marshal(data)
 	w.Write(b)
-
-	//	fmt.Fprintf(w, "data = %v\n", data)
-	//fmt.Fprintf(w, "stamp = %v\n", stamp)
 }
 
 func debug(data []byte, err error) {
