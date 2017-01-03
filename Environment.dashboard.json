@@ -44,7 +44,7 @@
   },
   "refresh": false,
   "schemaVersion": 13,
-  "version": 14,
+  "version": 16,
   "links": [],
   "gnetId": null,
   "rows": [
@@ -100,7 +100,7 @@
               "to": "null"
             }
           ],
-          "span": 6,
+          "span": 4,
           "sparkline": {
             "fillColor": "rgba(31, 118, 189, 0.18)",
             "full": false,
@@ -178,7 +178,7 @@
               "to": "null"
             }
           ],
-          "span": 6,
+          "span": 4,
           "sparkline": {
             "fillColor": "rgba(31, 118, 189, 0.18)",
             "full": false,
@@ -208,11 +208,90 @@
             }
           ],
           "valueName": "current"
+        },
+        {
+          "id": 6,
+          "title": "Outside Temperature",
+          "error": false,
+          "span": 4,
+          "editable": true,
+          "type": "singlestat",
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "outside_temperature",
+              "intervalFactor": 2,
+              "metric": "outside_temperature",
+              "step": 1800,
+              "legendFormat": "Temp"
+            }
+          ],
+          "links": [],
+          "datasource": "Prom",
+          "maxDataPoints": 100,
+          "interval": null,
+          "cacheTimeout": null,
+          "format": "celsius",
+          "prefix": "",
+          "postfix": "",
+          "nullText": null,
+          "valueMaps": [
+            {
+              "value": "null",
+              "op": "=",
+              "text": "N/A"
+            }
+          ],
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "rangeMaps": [
+            {
+              "from": "null",
+              "to": "null",
+              "text": "N/A"
+            }
+          ],
+          "mappingType": 1,
+          "nullPointMode": "connected",
+          "valueName": "avg",
+          "prefixFontSize": "50%",
+          "valueFontSize": "80%",
+          "postfixFontSize": "50%",
+          "thresholds": "",
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "sparkline": {
+            "show": true,
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "fillColor": "rgba(31, 118, 189, 0.18)"
+          },
+          "gauge": {
+            "show": false,
+            "minValue": 0,
+            "maxValue": 100,
+            "thresholdMarkers": true,
+            "thresholdLabels": false
+          },
+          "height": ""
         }
       ],
       "showTitle": false,
       "titleSize": "h3",
-      "height": 249,
+      "height": 277,
       "repeat": null,
       "repeatRowId": null,
       "repeatIteration": null,
@@ -257,12 +336,17 @@
             },
             {
               "alias": "Target Temperature",
-              "color": "#1F78C1",
+              "color": "#6D1F62",
               "fill": 0
             },
             {
               "alias": "Temperature",
               "color": "#EAB839"
+            },
+            {
+              "alias": "Outside Temp",
+              "color": "#508642",
+              "fill": 5
             }
           ],
           "span": 6,
@@ -294,6 +378,15 @@
               "legendFormat": "Target Temperature",
               "metric": "target_temperature",
               "refId": "C",
+              "step": 1200
+            },
+            {
+              "expr": "outside_temperature",
+              "interval": "",
+              "intervalFactor": 10,
+              "legendFormat": "Outside Temp",
+              "metric": "",
+              "refId": "D",
               "step": 1200
             }
           ],
@@ -419,7 +512,7 @@
       ],
       "showTitle": false,
       "titleSize": "h6",
-      "height": 250,
+      "height": "400",
       "repeat": null,
       "repeatRowId": null,
       "repeatIteration": null,
