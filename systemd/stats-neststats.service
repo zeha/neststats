@@ -1,0 +1,13 @@
+[Unit]
+Description=stats-neststats
+
+[Service]
+ExecStart=/home/stats/neststats.linux.amd64 -client-secret "c.xxx" -thermostat-id "foo"
+User=stats
+Group=stats
+TimeoutStopSec=5
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

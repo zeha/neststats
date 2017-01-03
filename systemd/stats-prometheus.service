@@ -1,0 +1,13 @@
+[Unit]
+Description=stats-prometheus
+
+[Service]
+ExecStart=/home/stats/prometheus/prometheus -config.file /home/stats/promdata/prometheus.yml -storage.local.path /home/stats/promdata/data -web.listen-address "127.0.0.1:9090"
+User=stats
+Group=stats
+TimeoutStopSec=5
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
