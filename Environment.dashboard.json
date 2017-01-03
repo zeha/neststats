@@ -1,41 +1,5 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROM",
-      "label": "Prom",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    }
-  ],
-  "__requires": [
-    {
-      "type": "panel",
-      "id": "singlestat",
-      "name": "Singlestat",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "graph",
-      "name": "Graph",
-      "version": ""
-    },
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "4.0.2"
-    },
-    {
-      "type": "datasource",
-      "id": "prometheus",
-      "name": "Prometheus",
-      "version": "1.0.0"
-    }
-  ],
-  "id": null,
+  "id": 1,
   "title": "Environment",
   "tags": [],
   "style": "dark",
@@ -44,7 +8,7 @@
   "sharedCrosshair": false,
   "hideControls": false,
   "time": {
-    "from": "now-12h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {
@@ -80,7 +44,7 @@
   },
   "refresh": false,
   "schemaVersion": 13,
-  "version": 4,
+  "version": 8,
   "links": [],
   "gnetId": null,
   "rows": [
@@ -88,38 +52,29 @@
       "title": "Dashboard Row",
       "panels": [
         {
-          "id": 3,
-          "title": "Temperature",
-          "error": false,
-          "span": 3,
-          "editable": true,
-          "type": "singlestat",
-          "targets": [
-            {
-              "refId": "A",
-              "expr": "env_temperature",
-              "intervalFactor": 2,
-              "metric": "env_temperature",
-              "step": 600,
-              "legendFormat": ""
-            }
-          ],
-          "links": [],
-          "datasource": "${DS_PROM}",
-          "maxDataPoints": 100,
-          "interval": null,
           "cacheTimeout": null,
-          "format": "celsius",
-          "prefix": "",
-          "postfix": "",
-          "nullText": null,
-          "valueMaps": [
-            {
-              "value": "null",
-              "op": "=",
-              "text": "N/A"
-            }
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "rgba(79, 120, 255, 0.97)",
+            "rgba(3, 194, 22, 0.88)",
+            "rgba(245, 54, 54, 0.9)"
           ],
+          "datasource": "Prom",
+          "editable": true,
+          "error": false,
+          "format": "celsius",
+          "gauge": {
+            "maxValue": 30,
+            "minValue": 0,
+            "show": true,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "id": 3,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
           "mappingTypes": [
             {
               "name": "value to text",
@@ -130,40 +85,50 @@
               "value": 2
             }
           ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
           "rangeMaps": [
             {
               "from": "null",
-              "to": "null",
-              "text": "N/A"
+              "text": "N/A",
+              "to": "null"
             }
           ],
-          "mappingType": 1,
-          "nullPointMode": "connected",
-          "valueName": "avg",
-          "prefixFontSize": "50%",
-          "valueFontSize": "80%",
-          "postfixFontSize": "50%",
-          "thresholds": "19,23",
-          "colorBackground": false,
-          "colorValue": false,
-          "colors": [
-            "rgba(79, 120, 255, 0.97)",
-            "rgba(3, 194, 22, 0.88)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
+          "span": 3,
           "sparkline": {
-            "show": false,
+            "fillColor": "rgba(31, 118, 189, 0.18)",
             "full": false,
             "lineColor": "rgb(31, 120, 193)",
-            "fillColor": "rgba(31, 118, 189, 0.18)"
+            "show": false
           },
-          "gauge": {
-            "show": true,
-            "minValue": 0,
-            "maxValue": 30,
-            "thresholdMarkers": true,
-            "thresholdLabels": false
-          }
+          "targets": [
+            {
+              "expr": "env_temperature",
+              "intervalFactor": 10,
+              "legendFormat": "",
+              "metric": "env_temperature",
+              "refId": "A",
+              "step": 200
+            }
+          ],
+          "thresholds": "19,23",
+          "title": "Temperature",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "current",
+          "decimals": 1
         },
         {
           "cacheTimeout": null,
@@ -174,7 +139,7 @@
             "rgb(28, 175, 29)",
             "rgba(245, 54, 54, 0.9)"
           ],
-          "datasource": "${DS_PROM}",
+          "datasource": "Prom",
           "editable": true,
           "error": false,
           "format": "percent",
@@ -228,7 +193,7 @@
               "legendFormat": "",
               "metric": "env_humidity",
               "refId": "A",
-              "step": 600
+              "step": 40
             }
           ],
           "thresholds": "30,45",
@@ -242,15 +207,15 @@
               "value": "null"
             }
           ],
-          "valueName": "avg"
+          "valueName": "current"
         },
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_PROM}",
+          "datasource": "Prom",
           "editable": true,
           "error": false,
-          "fill": 1,
+          "fill": 2,
           "id": 1,
           "legend": {
             "avg": false,
@@ -264,12 +229,17 @@
           "lines": true,
           "linewidth": 1,
           "links": [],
-          "nullPointMode": "connected",
+          "nullPointMode": "null",
           "percentage": false,
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Humidity%",
+              "yaxis": 2
+            }
+          ],
           "span": 6,
           "stack": false,
           "steppedLine": false,
@@ -277,33 +247,33 @@
             {
               "expr": "env_humidity",
               "interval": "",
-              "intervalFactor": 2,
+              "intervalFactor": 10,
               "legendFormat": "Humidity%",
               "metric": "env_humidity",
               "refId": "A",
-              "step": 120
+              "step": 20
             },
             {
               "expr": "env_temperature",
               "interval": "",
-              "intervalFactor": 2,
+              "intervalFactor": 10,
               "legendFormat": "Temperature C",
               "metric": "env_temperature",
               "refId": "B",
-              "step": 120
+              "step": 20
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Ambient",
+          "title": "",
           "tooltip": {
             "msResolution": false,
             "shared": true,
             "sort": 0,
             "value_type": "individual"
           },
-          "transparent": false,
+          "transparent": true,
           "type": "graph",
           "xaxis": {
             "mode": "time",
@@ -313,22 +283,23 @@
           },
           "yaxes": [
             {
-              "format": "short",
-              "label": null,
+              "format": "celsius",
+              "label": "",
               "logBase": 1,
-              "max": null,
-              "min": null,
+              "max": "40",
+              "min": "5",
               "show": true
             },
             {
-              "format": "short",
-              "label": null,
+              "format": "percent",
+              "label": "",
               "logBase": 1,
-              "max": null,
-              "min": null,
+              "max": "90",
+              "min": "10",
               "show": true
             }
-          ]
+          ],
+          "repeat": null
         }
       ],
       "showTitle": false,
