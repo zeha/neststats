@@ -234,7 +234,7 @@ func main() {
 		}
 	}()
 
-	weatherTicker := time.NewTicker(time.Minute * 30)
+	weatherTicker := time.NewTicker(time.Minute * 10)
 	go func() {
 		if *owmAPIKey == "" {
 			log.Printf("no OWM Api Key, not fetching weather data")
