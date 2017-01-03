@@ -1,0 +1,8 @@
+  $ export GOPATH=$HOME/work
+  $ go get -v github.com/zeha/neststats
+  $ cd $GOPATH/src/github.com/zeha/neststats
+  $ go build
+  $ ./neststats -client-secret c.xxx -thermostat-id foo
+
+Prometheus metrics will spawn on http://127.0.0.1:9092/metrics.
+
